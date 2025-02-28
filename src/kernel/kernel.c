@@ -10,6 +10,4 @@ void kernel_main(void) {
     video_memory[6] = 'A';
     video_memory[7] = 0x07;
 
-    // Infinite loop to prevent unexpected crashes
-    
 }
