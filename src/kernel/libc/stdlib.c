@@ -24,6 +24,8 @@ static void init_heap_pages(void) {
     }
     heap_initialized = 1; /* setting our flag to True*/
 }
+
+
 int find_free_page() {
     for (int i = 0; i < MAX_PAGES; i++) {
         if (_heap_pages[i].is_free) {
@@ -34,6 +36,33 @@ int find_free_page() {
     return -1; /* return -1 if no free page is found */    
 }
 
+uint8_t *find_valid_starting_pos(uint8_t* ptr) {
+    uint8_t is_valid; /* boolean variable */
+    do {
+        is_valid = 1;
+        /* return false if couldn't find a valid starting position (it doesn't exist)*/
+        if (ptr >= _heap_end) {
+            return NULL;
+        }
+        
+        for (size_t i = 0; i < MAX_PAGES; i++) {
+            if (!_heap_pages[i].is_free) {
+                /* break if the start of the new chunk falls into another chunk */
+                if ((ptr >= _heap_pages[i].data) && (ptr <= (uint8_t*)_heap_pages[i].data + _heap_pages[i].size)) {
+                    is_valid = 0;
+                    /* set _heap_ptr to the end of the chunk */
+                    ptr = (uint8_t*)_heap_pages[i].data + _heap_pages[i].size + 8;
+                    break;
+                }
+            }
+        }
+    } while (!is_valid);
+    return ptr;
+}
+
+
+
+/* please note that this malloc works with a fixed size heap */
 void *malloc(size_t size) {
     if (!heap_initialized) {
         init_heap_pages();
@@ -44,19 +73,7 @@ void *malloc(size_t size) {
     /* aligning size */
     size = (size + 7) & ~7;
 
-    
-    void *ptr = NULL;
-    size_t i = 0;
-    /* checking if it's possible to reuse a free block */
-    for (size_t i = 0; i < MAX_PAGES; i++) {
-        if (_heap_pages[i].is_free && _heap_pages[i].size >= size) {
-            _heap_pages[i].size = size;
-            ptr = _heap_pages[i].data;
-            return ptr;
-        } 
-    }
 
-    
     /* looking for the first free page */
     int j = find_free_page();
     /* if there is a free page look */
@@ -71,19 +88,23 @@ void *malloc(size_t size) {
             if (end_chunk > _heap_end) {
                 return NULL;
             }
-            
+
+            /* return NULL if couldn't find a valid starting position */
+            _heap_ptr = find_valid_starting_pos(_heap_ptr);
+            if (!_heap_ptr) return NULL; 
+
             /* checking if it's small enough to fit in the spaces*/
             for (size_t i = 0; i < MAX_PAGES; i++) {
                 if (!_heap_pages[i].is_free) {
-                    /* break if the end of the new chunk falls into another chunk */
-                    if ((end_chunk >= _heap_pages[i].data) && (end_chunk <= _heap_pages[i].data + _heap_pages[i].size)) {
+                    /* break if there is an overlap */
+                    if ((uint8_t*)_heap_pages[i].data < end_chunk &&
+                        ((uint8_t*)_heap_pages[i].data + _heap_pages[i].size) > _heap_ptr) {
                         does_fit = 0;
                         /* set _heap_ptr to the end of the chunk*/
                         _heap_ptr = (uint8_t*)_heap_pages[i].data + _heap_pages[i].size + 8;
                         break;
                     }
                 }
-                
             }
             
             /* if there is a free space allocate the memory and return ptr to memory */
@@ -107,12 +128,13 @@ void free(void *ptr) {
     {
         /* check for the page we want to free */
         if (ptr == _heap_pages[i].data) {
-            _heap_pages[i].is_free = 1; /* mark the page as "free" */
             uint8_t *reset = _heap_pages[i].data;
             /* reset all the bytes of the page */
             for (size_t j = 0; j < _heap_pages[i].size; j++) {
                 reset[j] = 0;
             }
+            _heap_pages[i].is_free = 1; /* mark the page as "free" */
+            _heap_pages[i].size = 0; /* resizing the page */
             return;
         }
     }
