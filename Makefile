@@ -1,39 +1,64 @@
-CROSS_COMPILE = x86_64-elf-
-CC = $(CROSS_COMPILE)gcc
-LD = ld
-AS = nasm
-CFLAGS = -ffreestanding -mno-red-zone -m64 -nostdlib -Wall -Wextra
+CROSS_COMPILE := x86_64-elf-
+CC            := $(CROSS_COMPILE)gcc
+AS            := nasm
+LD            := ld
+
+# freestanding + libc headers
+CFLAGS        := -ffreestanding -mno-red-zone -m64 -nostdlib -Wall -Wextra \
+                 -I src/kernel/libc -I src/kernel
+LDFLAGS       := -n -T src/boot/linker.ld
+
+# all object files
+OBJS := header.o entry.o kernel.o stdlib.o
 
 all: iso/build/kernel.elf iso
 
-# Assemble entry.S
-entry.o: src/boot/entry.asm
-	$(AS) -f elf64 src/boot/entry.asm -o entry.o
-
-# Compile kernel.c
-kernel.o: src/kernel/kernel.c
-	$(CC) $(CFLAGS) -c src/kernel/kernel.c -o kernel.o
-
-# Assemble header.S
+#---------------------------------------------------
+# Assemble boot-time stubs
+#---------------------------------------------------
 header.o: src/boot/header.asm
-	$(AS) -f elf64 src/boot/header.asm -o header.o
+	$(AS) -f elf64 $< -o $@
 
-# Modify the linking step to include header.o
-iso/build/kernel.elf: header.o entry.o kernel.o
+entry.o:  src/boot/entry.asm
+	$(AS) -f elf64 $< -o $@
+
+#---------------------------------------------------
+# Compile kernel + custom libc
+#---------------------------------------------------
+kernel.o: src/kernel/kernel.c \
+          src/kernel/libc/stdlib.h \
+          src/kernel/libc/stddef.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+stdlib.o: src/kernel/libc/stdlib.c \
+          src/kernel/libc/stdlib.h \
+          src/kernel/libc/stddef.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+#---------------------------------------------------
+# Link into a freestanding ELF
+#---------------------------------------------------
+iso/build/kernel.elf: $(OBJS)
 	mkdir -p iso/build
-	$(LD) -n -T src/boot/linker.ld -o iso/build/kernel.elf header.o entry.o kernel.o
+	$(LD) $(LDFLAGS) -o $@ $(OBJS)
 
-# Generate ISO with GRUB
+#---------------------------------------------------
+# Package with GRUB
+#---------------------------------------------------
 iso: iso/build/kernel.elf
+	# ensure the GRUB folder exists (it’s already versioned in your repo)
 	mkdir -p iso/boot/grub
-	ln -sf ../build/kernel.elf iso/boot/kernel.elf  # Symlink kernel
-	# cp src/boot/grub.cfg iso/boot/grub/  # Copy GRUB config
-	grub2-mkrescue -o iso/build/salsaos.iso iso/
+	# symlink the freshly built kernel
+	ln -sf ../build/kernel.elf iso/boot/kernel.elf
+	# generate the bootable ISO
+	grub2-mkrescue -o iso/build/salsaos.iso iso/ || true
 
-# Run the OS in QEMU
+#---------------------------------------------------
+# Run & Clean
+#---------------------------------------------------
 run: iso
 	qemu-system-x86_64 -cdrom iso/build/salsaos.iso
 
-# Cleanup
 clean:
-	rm -rf entry.o kernel.o iso/build/kernel.elf iso/build/salsaos.iso
+	rm -f header.o entry.o kernel.o stdlib.o
+	rm -rf iso/build

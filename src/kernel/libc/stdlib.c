@@ -80,18 +80,19 @@ void *malloc(size_t size) {
     if (j >= 0) {
         /* implementing a first-fit algorithm */
         do {
+            /* return NULL if couldn't find a valid starting position */
+            _heap_ptr = find_valid_starting_pos(_heap_ptr);
+            if (!_heap_ptr) return NULL; 
+            
             /* looking for a space big enough */
             uint8_t does_fit = 1;
-            size_t end_chunk = _heap_ptr + size; 
+            size_t end_chunk = (size_t)_heap_ptr + size; 
             
             /* return NULL if the chunk is too big to fit in the heap */
             if (end_chunk > _heap_end) {
                 return NULL;
             }
 
-            /* return NULL if couldn't find a valid starting position */
-            _heap_ptr = find_valid_starting_pos(_heap_ptr);
-            if (!_heap_ptr) return NULL; 
 
             /* checking if it's small enough to fit in the spaces*/
             for (size_t i = 0; i < MAX_PAGES; i++) {

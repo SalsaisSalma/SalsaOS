@@ -2,26 +2,32 @@ ENTRY(_start)
 
 SECTIONS
 {
-    . = 1M; /* Start at 1MB (GRUB loads kernels here) */
+    . = 1M; /* Load at 1MB */
 
     .boot : {
-        KEEP(*(.multiboot_header)) /* Place Multiboot2 header first */
+        KEEP(*(.multiboot_header))
     }
 
     .text : {
-        *(.text) /* Kernel code */
+        *(.text)
     }
 
     .rodata : {
-        *(.rodata) /* Read-only data (like strings) */
+        *(.rodata)
     }
 
     .data : {
-        *(.data) /* Global variables */
+        *(.data)
     }
 
     .bss : {
         *(COMMON)
         *(.bss)
+
+        /* defining heap symbols */
+        . = ALIGN(4096);
+        _heap_start = .;
+        . = . + (64 * 1024); /* define a 64KB heap */
+        _heap_end = .;
     }
 }
