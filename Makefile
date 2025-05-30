@@ -52,7 +52,8 @@ iso: iso/build/kernel.elf
 	ln -sf ../build/kernel.elf iso/boot/kernel.elf
 	# generate the bootable ISO
 	grub2-mkrescue -o iso/build/salsaos.iso iso/ || true
-
+	rm -f header.o entry.o kernel.o stdlib.o
+	
 #---------------------------------------------------
 # Run & Clean
 #---------------------------------------------------
@@ -61,4 +62,4 @@ run: iso
 
 clean:
 	rm -f header.o entry.o kernel.o stdlib.o
-	rm -rf iso/build
+	rm -rf iso/build/*
