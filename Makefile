@@ -9,7 +9,7 @@ CFLAGS        := -ffreestanding -mno-red-zone -m64 -nostdlib -Wall -Wextra \
 LDFLAGS       := -n -T src/boot/linker.ld
 
 # all object files
-OBJS := header.o entry.o kernel.o stdlib.o
+OBJS := header.o entry.o kernel.o stdlib.o stdio.o
 
 all: iso/build/kernel.elf iso
 
@@ -35,6 +35,11 @@ stdlib.o: src/kernel/libc/stdlib.c \
           src/kernel/libc/stddef.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+stdio.o: src/kernel/libc/stdio.c \
+		 src/kernel/libc/stdio.h \
+		 src/kernel/libc/stddef.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
 #---------------------------------------------------
 # Link into a freestanding ELF
 #---------------------------------------------------
@@ -52,7 +57,7 @@ iso: iso/build/kernel.elf
 	ln -sf ../build/kernel.elf iso/boot/kernel.elf
 	# generate the bootable ISO
 	grub2-mkrescue -o iso/build/salsaos.iso iso/ || true
-	rm -f header.o entry.o kernel.o stdlib.o
+	rm -f header.o entry.o kernel.o stdlib.o stdio.o
 	
 #---------------------------------------------------
 # Run & Clean
