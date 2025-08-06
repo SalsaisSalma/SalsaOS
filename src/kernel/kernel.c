@@ -1,17 +1,15 @@
-#include "libc/stdlib.h"
 #include "libc/stdio.h"
+#include "cpu.h"          /* cli/sti + port-I/O */
+#include "interrupts/interrupts.h"   /* idt_init            */
+#include "interrupts/pic.h"          /* PIC_remap etc.      */
 
+void kernel_main(void)
+{
+    cli();                        /* 1. stop stray IRQs            */
+    PIC_remap(0x20, 0x28);        /* 2. move IRQs to 32-47         */
+    idt_init();                   /* 3. load IDT (sti inside)      */
+    IRQ_clear_mask(0);            /* 4. unmask PIT so we can test  */
 
-void kernel_main() {
-    cls();
-    printf("Yo bro\n");
-    printf("aaaaaaaaaaaaaaaaaaaaa\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n");
-    printf("damn i work\nculoasssssssssssssssssssssssssssssssssssssssssss\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-    printf("truncu is follas\n\n");
-    printf("loooooooool");
-
-    puts("puts is so cool");
-    puts("pls work bro\n");
-    puts("come ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooon\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-    puts("let's go");
+    puts("Interrupts are live!");
+    __asm__ volatile ("int3");    /* software test - see console   */
 }

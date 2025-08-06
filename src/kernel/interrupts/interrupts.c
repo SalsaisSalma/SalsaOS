@@ -1,6 +1,6 @@
 #include "interrupts.h"
 
-// source osde.org
+// source osdev.org
 
 
 __attribute__((aligned(0x10))) 

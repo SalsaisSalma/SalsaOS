@@ -9,7 +9,11 @@ CFLAGS        := -ffreestanding -mno-red-zone -m64 -nostdlib -Wall -Wextra \
 LDFLAGS       := -n -T src/boot/linker.ld
 
 # all object files
-OBJS := header.o entry.o kernel.o stdlib.o stdio.o
+OBJS := header.o entry.o \
+        kernel.o \
+        stdlib.o stdio.o \
+        interrupts_stubs.o interrupts.o pic.o   
+
 
 all: iso/build/kernel.elf iso
 
@@ -22,11 +26,21 @@ header.o: src/boot/header.asm
 entry.o:  src/boot/entry.asm
 	$(AS) -f elf64 $< -o $@
 
+###############################################################################
+#  Assemble interrupt *stub table* (NASM)
+###############################################################################
+interrupts_stubs.o: src/kernel/interrupts/interrupts.asm
+	$(AS) -f elf64 $< -o $@
+
 #---------------------------------------------------
-# Compile kernel + custom libc
+# Compile kernel + custom libc + interrupts and pic
 #---------------------------------------------------
-kernel.o: src/kernel/kernel.c \
-          src/kernel/libc/stdlib.h \
+kernel.o: src/kernel/kernel.c                       \
+          src/kernel/interrupts/interrupts.h        \
+          src/kernel/interrupts/pic.h               \
+          src/kernel/cpu.h                          \
+          src/kernel/libc/stdio.h                   \
+          src/kernel/libc/stdlib.h                  \
           src/kernel/libc/stddef.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -38,6 +52,14 @@ stdlib.o: src/kernel/libc/stdlib.c \
 stdio.o: src/kernel/libc/stdio.c \
 		 src/kernel/libc/stdio.h \
 		 src/kernel/libc/stddef.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+interrupts.o: src/kernel/interrupts/interrupts.c \
+              src/kernel/interrupts/interrupts.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+pic.o: src/kernel/interrupts/pic.c \
+       src/kernel/interrupts/pic.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 #---------------------------------------------------
