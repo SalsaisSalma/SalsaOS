@@ -1,10 +1,12 @@
 #include "libc/stdio.h"
-#include "cpu.h"          /* cli/sti + port-I/O */
+#include "cpu/cpu.h"          /* cli/sti + port-I/O */
 #include "interrupts/interrupts.h"   /* idt_init            */
 #include "interrupts/pic.h"          /* PIC_remap etc.      */
 
 void kernel_main(void)
 {
+    cls();
+    puts("let's gooo");
     cli();                        /* 1. stop stray IRQs            */
     PIC_remap(0x20, 0x28);        /* 2. move IRQs to 32-47         */
     idt_init();                   /* 3. load IDT (sti inside)      */

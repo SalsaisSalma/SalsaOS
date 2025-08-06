@@ -6,13 +6,17 @@ LD            := ld
 # freestanding + libc headers
 CFLAGS        := -ffreestanding -mno-red-zone -m64 -nostdlib -Wall -Wextra \
                  -I src/kernel/libc -I src/kernel
+
+CFLAGS_INTR := $(CFLAGS) -mgeneral-regs-only
+
 LDFLAGS       := -n -T src/boot/linker.ld
 
 # all object files
 OBJS := header.o entry.o \
         kernel.o \
         stdlib.o stdio.o \
-        interrupts_stubs.o interrupts.o pic.o   
+        interrupts_stubs.o interrupts.o pic.o \
+		cpu.o
 
 
 all: iso/build/kernel.elf iso
@@ -38,7 +42,7 @@ interrupts_stubs.o: src/kernel/interrupts/interrupts.asm
 kernel.o: src/kernel/kernel.c                       \
           src/kernel/interrupts/interrupts.h        \
           src/kernel/interrupts/pic.h               \
-          src/kernel/cpu.h                          \
+          src/kernel/cpu/cpu.h                          \
           src/kernel/libc/stdio.h                   \
           src/kernel/libc/stdlib.h                  \
           src/kernel/libc/stddef.h
@@ -56,12 +60,16 @@ stdio.o: src/kernel/libc/stdio.c \
 
 interrupts.o: src/kernel/interrupts/interrupts.c \
               src/kernel/interrupts/interrupts.h
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS_INTR) -c $< -o $@
 
 pic.o: src/kernel/interrupts/pic.c \
        src/kernel/interrupts/pic.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+cpu.o: src/kernel/cpu/cpu.c \
+	   src/kernel/cpu/cpu.h \
+	   src/kernel/libc/stddef.h
+	$(CC) $(CFLAGS) -c $< -o $@
 #---------------------------------------------------
 # Link into a freestanding ELF
 #---------------------------------------------------
@@ -79,7 +87,7 @@ iso: iso/build/kernel.elf
 	ln -sf ../build/kernel.elf iso/boot/kernel.elf
 	# generate the bootable ISO
 	grub2-mkrescue -o iso/build/salsaos.iso iso/ || true
-	rm -f header.o entry.o kernel.o stdlib.o stdio.o
+	rm -f $(OBJS)
 	
 #---------------------------------------------------
 # Run & Clean
@@ -88,5 +96,5 @@ run: iso
 	qemu-system-x86_64 -cdrom iso/build/salsaos.iso
 
 clean:
-	rm -f header.o entry.o kernel.o stdlib.o
+	rm -f $(OBJS)
 	rm -rf iso/build/*
