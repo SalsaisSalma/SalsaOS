@@ -18,11 +18,20 @@ void cls(void) {/* clears the screen */
     pos = 0;
 }
 
-void putchar(int pos, char c) {
+void putchar(char c) {
     uint16_t *vga = (uint16_t *)VGA_BUFFER;
     vga[pos] = (WHITE_ON_BLACK << 8) | c;
+    pos++;  
 }
 
+/*
+    i know i can just do 
+    while (*format) {
+        putchar(*format);
+        *format++;
+    }
+    but i think it lakcs readability and it's not that more efficient
+*/
 // TODO implement check to see if pos hits bottom of the screen
 int printf(const char *format) {
     
@@ -31,8 +40,7 @@ int printf(const char *format) {
         if (format[i] == '\n') {
             pos += NUMBER_OF_COLUMNS - (pos % NUMBER_OF_COLUMNS); /* move to next line */
         } else {
-            putchar(pos, format[i]);
-            pos++;  
+            putchar(format[i]);
         }
         i++;
     }
@@ -48,8 +56,7 @@ int puts(const char *format) { /* same as printf but adding a \n at the end */
         if (format[i] == '\n') {
             pos += NUMBER_OF_COLUMNS - (pos % NUMBER_OF_COLUMNS); /* move to next line */
         } else {
-            putchar(pos, format[i]);
-            pos++;  
+            putchar(format[i]);
         }
         i++;
     }

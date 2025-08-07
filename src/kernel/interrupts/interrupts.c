@@ -9,9 +9,7 @@ static idt_entry_t idt[IDT_MAX_DESCRIPTORS]; // Create an array of IDT entries; 
 static idtr_t idtr;
 
 
-void INTERRUPT interrupt_handler(interrupt_frame *frame) {
 
-}
 
 __attribute__((noreturn))
 void exception_handler() {

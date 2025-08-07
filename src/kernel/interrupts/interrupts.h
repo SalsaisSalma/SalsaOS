@@ -3,7 +3,6 @@
 
 // source osde.org
 
-#define INTERRUPT __attribute__ ((interrupt))
 #define IDT_MAX_DESCRIPTORS 256
 #define GDT_OFFSET_KERNEL_CODE 0x08
 
@@ -30,7 +29,6 @@ typedef struct {
 	uint64_t	base;
 } __attribute__((packed)) idtr_t;
 
-void INTERRUPT interrupt_handler(interrupt_frame *frame);
 
 
 __attribute__((noreturn))
