@@ -20,8 +20,13 @@ void cls(void) {/* clears the screen */
 
 void putchar(char c) {
     uint16_t *vga = (uint16_t *)VGA_BUFFER;
-    vga[pos] = (WHITE_ON_BLACK << 8) | c;
-    pos++;  
+    if (c == '\n') {
+        pos += NUMBER_OF_COLUMNS - (pos % NUMBER_OF_COLUMNS); /* move to next line */
+    } else {
+        vga[pos] = (WHITE_ON_BLACK << 8) | c;
+        pos++;  
+    }
+    
 }
 
 /*
@@ -37,11 +42,7 @@ int printf(const char *format) {
     
     size_t i = 0;
     while (format[i] != '\0') {
-        if (format[i] == '\n') {
-            pos += NUMBER_OF_COLUMNS - (pos % NUMBER_OF_COLUMNS); /* move to next line */
-        } else {
-            putchar(format[i]);
-        }
+        putchar(format[i]);
         i++;
     }
     
@@ -53,14 +54,10 @@ int puts(const char *format) { /* same as printf but adding a \n at the end */
     
     size_t i = 0;
     while (format[i] != '\0') {
-        if (format[i] == '\n') {
-            pos += NUMBER_OF_COLUMNS - (pos % NUMBER_OF_COLUMNS); /* move to next line */
-        } else {
-            putchar(format[i]);
-        }
+        putchar(format[i]);
         i++;
     }
-    pos += NUMBER_OF_COLUMNS - (pos % NUMBER_OF_COLUMNS); /* move to next line */
+    putchar('\n'); /* move to next line */
     
     return 0;
 }
