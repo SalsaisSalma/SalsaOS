@@ -33,6 +33,7 @@ void idt_set_descriptor(uint8_t vector, void* isr, uint8_t flags) {
 static bool vectors[IDT_MAX_DESCRIPTORS];
 
 extern void* isr_stub_table[];
+extern void  irq1_stub(void); 
 
 void idt_init() {
     idtr.base = (uintptr_t)&idt[0];
@@ -42,6 +43,10 @@ void idt_init() {
         idt_set_descriptor(vector, isr_stub_table[vector], 0x8E);
         vectors[vector] = true;
     }
+
+     // IRQ1 (keyboard) goes to vector 0x20+1 = 33 after PIC remap
+    idt_set_descriptor(32 + 1, irq1_stub, 0x8E);
+
 
     __asm__ volatile ("lidt %0" : : "m"(idtr)); // load the new IDT
     __asm__ volatile ("sti"); // set the interrupt flag

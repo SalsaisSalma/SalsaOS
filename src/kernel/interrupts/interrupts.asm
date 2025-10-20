@@ -52,3 +52,9 @@ isr_stub_table:
     dq isr_stub_%+i
 %assign i i+1 
 %endrep
+
+extern keyboard_isr
+global irq1_stub
+irq1_stub:
+    call keyboard_isr
+    iretq

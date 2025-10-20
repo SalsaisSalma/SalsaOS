@@ -12,11 +12,12 @@ CFLAGS_INTR := $(CFLAGS) -mgeneral-regs-only
 LDFLAGS       := -n -T src/boot/linker.ld
 
 # all object files
-OBJS := header.o entry.o \
-        kernel.o \
-        stdlib.o stdio.o \
+OBJS := header.o entry.o                      \
+        kernel.o                              \
+        stdlib.o stdio.o                      \
         interrupts_stubs.o interrupts.o pic.o \
-		cpu.o
+		cpu.o                                 \
+		keyboard.o
 
 
 all: iso/build/kernel.elf iso
@@ -42,10 +43,11 @@ interrupts_stubs.o: src/kernel/interrupts/interrupts.asm
 kernel.o: src/kernel/kernel.c                       \
           src/kernel/interrupts/interrupts.h        \
           src/kernel/interrupts/pic.h               \
-          src/kernel/cpu/cpu.h                          \
+          src/kernel/cpu/cpu.h                      \
           src/kernel/libc/stdio.h                   \
           src/kernel/libc/stdlib.h                  \
-          src/kernel/libc/stddef.h
+          src/kernel/libc/stddef.h                  \
+		  src/kernel/devices/keyboard.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 stdlib.o: src/kernel/libc/stdlib.c \
@@ -70,6 +72,14 @@ cpu.o: src/kernel/cpu/cpu.c \
 	   src/kernel/cpu/cpu.h \
 	   src/kernel/libc/stddef.h
 	$(CC) $(CFLAGS) -c $< -o $@
+
+keyboard.o: src/kernel/devices/keyboard.c \
+			src/kernel/devices/keyboard.h \
+			src/kernel/cpu/cpu.h          \
+			src/kernel/libc/stdio.h       \
+			src/kernel/interrupts/pic.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
 #---------------------------------------------------
 # Link into a freestanding ELF
 #---------------------------------------------------
