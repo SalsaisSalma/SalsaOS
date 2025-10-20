@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "interrupts.h": "c",
-        "stdio.h": "c",
-        "pic.h": "c"
-    }
-}
