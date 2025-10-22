@@ -1,5 +1,5 @@
 #include "stdio.h"
-
+#include "stddef.h"
 
 #define VGA_BUFFER 0xB8000
 #define WHITE_ON_BLACK 0x07 

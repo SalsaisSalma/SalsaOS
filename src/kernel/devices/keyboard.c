@@ -1,5 +1,11 @@
 #include "keyboard.h"
 
+#include "cpu/cpu.h"
+#include "interrupts/pic.h"
+#include "libc/stdio.h"
+
+#define KB_DATA 0x60
+
 // minimal set 1 map just for testing
 static const char scancode_to_char[128] = {
     0,  27, '1','2','3','4','5','6','7','8','9','0','-','=', '\b',
@@ -7,14 +13,25 @@ static const char scancode_to_char[128] = {
     'a','s','d','f','g','h','j','k','l',';','\'','`',  0, '\\',
     'z','x','c','v','b','n','m',',','.','/',  0,      0,  0,  ' '
 };
-
+static unsigned int len_of_text = 0; // length of the text written until user presses \n
 void keyboard_isr(void) {
     uint8_t sc = inb(KB_DATA);
 
     // ignore key releases (>= 0x80)
+    //TODO fix this for unmapped keys (shift, Ctrl ecc ecc...)
     if (sc < 0x80) {
+        
         char ch = scancode_to_char[sc];
+        
         if (ch) putchar(ch);
+        
+        /* if backspace delete last written char */
+        if ((ch == '\b') && (len_of_text > 0)) { 
+            len_of_text--;
+        } else {
+            len_of_text++;
+        }
+        
     }
 
     // tell the PIC we're done with IRQ1

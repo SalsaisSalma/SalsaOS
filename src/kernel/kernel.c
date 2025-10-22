@@ -7,15 +7,16 @@
 void kernel_main(void) {
     cls();
     puts("Welcome to SalsaOS");
-    puts("Type on your keyboard...");
-
+    
     cli();
     idt_init();                 // load IDT with exceptions + IRQ1 gate
     PIC_remap(0x20, 0x28);      // IRQs -> 0x20..0x2F
     IRQ_set_mask(0x00);         // start masked
     IRQ_clear_mask(1);          // unmask keyboard only
-    sti();                      // now enable interrupts
+    sti();                      // enable interrupts
 
+    puts("Type on your keyboard...");
+    
     while (true)
-        hlt();                  // wait for IRQs (saves CPU)
+        hlt();                  // wait for IRQs
 }
