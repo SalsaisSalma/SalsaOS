@@ -23,13 +23,28 @@ void keyboard_isr(void) {
         
         char ch = scancode_to_char[sc];
         
-        if (ch) putchar(ch);
-        
-        /* if backspace delete last written char */
-        if ((ch == '\b') && (len_of_text > 0)) { 
-            len_of_text--;
-        } else {
-            len_of_text++;
+        if (ch) {
+
+            switch (ch) {
+                /* if backspace delete last written char */ 
+                case '\b':
+                    if (len_of_text > 0) {  
+                        len_of_text--;
+                        putchar(ch);
+                    }
+                    break;
+                case '\n':
+                    /*command sent*/
+                    len_of_text = 0;
+                    putchar(ch);
+                    break;
+                default:
+                    len_of_text++;
+                    putchar(ch);
+                    break;
+            
+            }
+     
         }
         
     }

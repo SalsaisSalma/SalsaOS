@@ -19,14 +19,22 @@ void cls(void) {/* clears the screen */
 }
 
 void putchar(char c) {
+    uint16_t blank = (WHITE_ON_BLACK << 8) | ' ';
     uint16_t *vga = (uint16_t *)VGA_BUFFER;
-    if (c == '\n') {
-        pos += NUMBER_OF_COLUMNS - (pos % NUMBER_OF_COLUMNS); /* move to next line */
-    } else {
-        vga[pos] = (WHITE_ON_BLACK << 8) | c;
-        pos++;  
-    }
     
+    switch (c) {
+        case '\n':
+            pos += NUMBER_OF_COLUMNS - (pos % NUMBER_OF_COLUMNS); /* move to next line */
+            break;
+        case '\b':
+            pos -= 1;
+            vga[pos] = blank;
+            break;
+        default:
+            vga[pos] = (WHITE_ON_BLACK << 8) | c;
+            pos++;
+            break;
+    }
 }
 
 /*
