@@ -80,23 +80,29 @@ int getc(void) {
 char *getline(void) {
     char ch;
     char *line;
-    int len_of_line;
+    char *temp;
+    int len_of_line = 0;
     while (true) {
         ch = getc();
         switch (ch) {
                 /* if backspace delete last written char */ 
             case '\b':
-                if (len_of_line > 0) {  
+                if (len_of_line > 0) {
+                    /* last char gets deleted from the list */
+                    line[len_of_line - 1] = 0;   
                     len_of_line--;
                     // putchar(ch);
                 }
                 break;
             case '\n':
                 /*command sent*/
+                // line[len_of_line] = '\n';
+                // line[len_of_line + 1] = 0;
                 len_of_line = 0;
                 // putchar(ch);
                 return line;
             default:
+                // line[len_of_line] = ch; 
                 len_of_line++;
                 // putchar(ch);
                 break;

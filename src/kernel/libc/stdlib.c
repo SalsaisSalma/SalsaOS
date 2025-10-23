@@ -142,6 +142,44 @@ void free(void *ptr) {
     }
 }
 
+static void *kmemcpy(void *dst, const void *src, size_t n) {
+    unsigned char *d = (unsigned char *)dst;
+    const unsigned char *s = (const unsigned char *)src;
+    while (n--) *d++ = *s++;
+    return dst;
+}
+
+static size_t heap_block_size(void *ptr) {
+    if (!ptr) return 0;
+    for (size_t i = 0; i < MAX_PAGES; i++) {
+        if (!_heap_pages[i].is_free && _heap_pages[i].data == ptr)
+            return _heap_pages[i].size;
+    }
+    return 0;
+}
+
+void *realloc(void *ptr, size_t new_size) {
+    if (!ptr) return malloc(new_size);
+    if (new_size == 0) {
+        free(ptr);
+        return NULL;
+    }
+
+    size_t old = heap_block_size(ptr);
+    if (old == 0) return NULL; // unknown pointer
+
+
+    void *np = malloc(new_size);
+    if (!np) return NULL;
+
+    
+    size_t copy = (old < new_size) ? old : new_size;
+    kmemcpy(np, ptr, copy);
+    free(ptr);
+    return np;
+}
+
+
 int abs(int number) {
     return (number >= 0) ? number : (number * (-1));
 }
