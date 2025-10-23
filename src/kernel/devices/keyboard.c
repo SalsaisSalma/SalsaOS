@@ -6,6 +6,10 @@
 
 #define KB_DATA 0x60
 
+#define KDB_BUF_SIZE 256
+
+static char kdb_buf[KDB_BUF_SIZE];
+
 // minimal set 1 map just for testing
 static const char scancode_to_char[128] = {
     0,  27, '1','2','3','4','5','6','7','8','9','0','-','=', '\b',

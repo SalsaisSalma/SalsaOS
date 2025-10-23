@@ -69,3 +69,41 @@ int puts(const char *format) { /* same as printf but adding a \n at the end */
     
     return 0;
 }
+
+int getc(void) {
+    char c;
+
+    return c;
+}
+
+//TODO implement allocation for the string
+char *getline(void) {
+    char ch;
+    char *line;
+    int len_of_line;
+    while (true) {
+        ch = getc();
+        switch (ch) {
+                /* if backspace delete last written char */ 
+            case '\b':
+                if (len_of_line > 0) {  
+                    len_of_line--;
+                    // putchar(ch);
+                }
+                break;
+            case '\n':
+                /*command sent*/
+                len_of_line = 0;
+                // putchar(ch);
+                return line;
+            default:
+                len_of_line++;
+                // putchar(ch);
+                break;
+            
+        }
+    }
+    
+
+    return NULL;
+}
