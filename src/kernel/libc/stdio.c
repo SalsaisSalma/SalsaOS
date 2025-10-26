@@ -117,9 +117,9 @@ char *getline(void) {
                 if (size_of_line > 0) {
                     /* backspace */ 
                     // putchar('\b');
-                    line[size_of_line] = '\0';
                     /* just reduce logical length; do NOT shrink buffer (avoids fragmentation since realloc is bad) */
                     size_of_line--;
+                    line[size_of_line] = '\0';
                 }
                 break;
 

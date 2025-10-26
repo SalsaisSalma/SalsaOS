@@ -48,7 +48,8 @@ uint8_t *find_valid_starting_pos(uint8_t* ptr, uint8_t *heap_end) {
         for (size_t i = 0; i < MAX_PAGES; i++) {
             if (!_heap_pages[i].is_free) {
                 /* break if the start of the new chunk falls into another chunk */
-                if ((ptr >= (uint8_t*)_heap_pages[i].data) && (ptr <= (uint8_t*)(_heap_pages[i].data + _heap_pages[i].size))) {
+                if ((ptr >= (uint8_t*)_heap_pages[i].data) && 
+                    (ptr <= (uint8_t*)(_heap_pages[i].data + _heap_pages[i].size))) {
                     is_valid = 0;
                     /* set _heap_ptr to the end of the chunk */
                     ptr = (uint8_t*)_heap_pages[i].data + _heap_pages[i].size + 8;
