@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include "stddef.h"
+#include "stdlib.h"
 
 #define VGA_BUFFER 0xB8000
 #define WHITE_ON_BLACK 0x07 
@@ -76,40 +77,69 @@ int getc(void) {
     return c;
 }
 
-//TODO implement allocation for the string
+/* small helper to grow capacity geometrically (64,128,256,...) or linear after 1 KiB */
+/* since my realloc is what it is just i just do this instead of realloc everytime */
+static int grow(char **pline, size_t *pcapacity, size_t need) {
+    char  *line     = *pline;
+    size_t capacity = *pcapacity;
+
+    if (need <= capacity) return 1;
+
+    size_t newcap = capacity ? capacity : 64;
+    while (newcap < need)
+        newcap = (newcap < 1024) ? (newcap * 2) : (newcap + 1024);
+
+    char *tmp = (char*)realloc(line, newcap);
+    if (!tmp) {
+        if (line) free(line);
+        *pline = NULL;
+        *pcapacity = 0;
+        return 0;
+    }
+
+    *pline = tmp;
+    *pcapacity = newcap;
+    return 1;
+}
+
 char *getline(void) {
-    char ch;
-    char *line;
-    char *temp;
-    int len_of_line = 0;
+    char *line = NULL;
+    size_t size_of_line = 0;
+    size_t capacity = 0;
+
     while (true) {
-        ch = getc();
+        int ch = getc();    
+        //TODO make something more clever than this in the keyboard driver             
+        if (ch == '\r') ch = '\n';
+
         switch (ch) {
-                /* if backspace delete last written char */ 
             case '\b':
-                if (len_of_line > 0) {
-                    /* last char gets deleted from the list */
-                    line[len_of_line - 1] = 0;   
-                    len_of_line--;
-                    // putchar(ch);
+                if (size_of_line > 0) {
+                    /* backspace */ 
+                    // putchar('\b');
+                    line[size_of_line] = '\0';
+                    /* just reduce logical length; do NOT shrink buffer (avoids fragmentation since realloc is bad) */
+                    size_of_line--;
                 }
                 break;
-            case '\n':
-                /*command sent*/
-                // line[len_of_line] = '\n';
-                // line[len_of_line + 1] = 0;
-                len_of_line = 0;
-                // putchar(ch);
+
+            case '\n': {
+                // ensure room for '\n' + NUL
+                if (!grow(&line, &capacity, size_of_line + 2)) return NULL;
+                line[size_of_line++] = '\n';
+                line[size_of_line]   = '\0';
+                // putchar('\n');
                 return line;
+            }
+
             default:
-                // line[len_of_line] = ch; 
-                len_of_line++;
-                // putchar(ch);
+                /* ensure room for this char + NULL (keep NULL reserved during editing) */
+                if (!grow(&line, &capacity, size_of_line + 1 + 1)) return NULL;
+                line[size_of_line++] = (char)ch;
+                putchar((char)ch);   
+                /* keep the buffer always NULL-terminated for safety while editing */
+                line[size_of_line] = '\0';
                 break;
-            
         }
     }
-    
-
-    return NULL;
 }
