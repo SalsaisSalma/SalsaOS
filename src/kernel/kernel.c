@@ -16,7 +16,9 @@ void kernel_main(void) {
     sti();                      // enable interrupts
 
     puts("Type on your keyboard...");
-    
-    while (true)
-        hlt();                  // wait for IRQs
+    char *command = NULL;
+    while (true) {
+        command = getline(); 
+        printf(command);
+    }
 }

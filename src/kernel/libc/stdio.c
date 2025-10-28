@@ -124,7 +124,7 @@ char *getline(void) {
             case '\b':
                 if (size_of_line > 0) {
                     /* backspace */ 
-                    // putchar('\b');
+                    putchar('\b');
                     /* just reduce logical length; do NOT shrink buffer (avoids fragmentation since realloc is bad) */
                     size_of_line--;
                     line[size_of_line] = '\0';
@@ -136,7 +136,7 @@ char *getline(void) {
                 if (!grow(&line, &capacity, size_of_line + 2)) return NULL;
                 line[size_of_line++] = '\n';
                 line[size_of_line]   = '\0';
-                // putchar('\n');
+                putchar('\n');
                 return line;
             }
 
