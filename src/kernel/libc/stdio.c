@@ -8,6 +8,7 @@
 
 static size_t pos = 0; 
 
+extern int kbd_poll_char(char *out);
 
 void cls(void) {/* clears the screen */
     uint16_t blank = (WHITE_ON_BLACK << 8) | ' ';
@@ -72,9 +73,14 @@ int puts(const char *format) { /* same as printf but adding a \n at the end */
 }
 
 int getc(void) {
+    /* tell the keyboard we are waiting for chars */
     char c;
-
-    return c;
+    /* non busy waiting */
+    while (true) {
+        if (kbd_poll_char(&c)) return c;
+         
+        __asm__ volatile("hlt");
+    }
 }
 
 /* small helper to grow capacity geometrically (64,128,256,...) or linear after 1 KiB */

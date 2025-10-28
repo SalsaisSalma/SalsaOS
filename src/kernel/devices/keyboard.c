@@ -6,9 +6,12 @@
 
 #define KB_DATA 0x60
 
-#define KDB_BUF_SIZE 256
+#define KBD_BUF_SIZE 256
 
-static char kdb_buf[KDB_BUF_SIZE];
+volatile static uint16_t kbd_tail = 0;
+volatile static uint16_t kbd_head = 0;
+static char kbd_buf[KBD_BUF_SIZE];
+
 
 // minimal set 1 map just for testing
 static const char scancode_to_char[128] = {
@@ -17,39 +20,34 @@ static const char scancode_to_char[128] = {
     'a','s','d','f','g','h','j','k','l',';','\'','`',  0, '\\',
     'z','x','c','v','b','n','m',',','.','/',  0,      0,  0,  ' '
 };
-static unsigned int len_of_text = 0; // length of the text written until user presses \n
+
+static inline int kbd_enqueue_char(char ch) {
+    uint16_t next = (kbd_head + 1) & (KBD_BUF_SIZE - 1);
+    if (next == kbd_tail) return 0; /* full */
+
+    kbd_buf[kbd_head] = ch;                         
+    kbd_head = next;
+    return 1;
+}
+
+int kbd_poll_char(char *out) {
+    if (kbd_head == kbd_tail) return 0;
+    *out = kbd_buf[kbd_tail];
+    kbd_tail = (kbd_tail + 1) & (KBD_BUF_SIZE - 1);
+    return 1;
+}
+
 void keyboard_isr(void) {
     uint8_t sc = inb(KB_DATA);
-
+    
+    
     // ignore key releases (>= 0x80)
     //TODO fix this for unmapped keys (shift, Ctrl ecc ecc...)
     if (sc < 0x80) {
         
         char ch = scancode_to_char[sc];
         
-        if (ch) {
-
-            switch (ch) {
-                /* if backspace delete last written char */ 
-                case '\b':
-                    if (len_of_text > 0) {  
-                        len_of_text--;
-                        putchar(ch);
-                    }
-                    break;
-                case '\n':
-                    /*command sent*/
-                    len_of_text = 0;
-                    putchar(ch);
-                    break;
-                default:
-                    len_of_text++;
-                    putchar(ch);
-                    break;
-            
-            }
-     
-        }
+        if (ch) kbd_enqueue_char(ch);
         
     }
 
