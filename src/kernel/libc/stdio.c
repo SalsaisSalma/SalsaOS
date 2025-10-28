@@ -29,8 +29,10 @@ void putchar(char c) {
             pos += NUMBER_OF_COLUMNS - (pos % NUMBER_OF_COLUMNS); /* move to next line */
             break;
         case '\b':
-            pos -= 1;
-            vga[pos] = blank;
+            if (pos > 0) {
+                pos -= 1;
+                vga[pos] = blank;
+            }
             break;
         default:
             vga[pos] = (WHITE_ON_BLACK << 8) | c;
@@ -78,7 +80,7 @@ int getc(void) {
     /* non busy waiting */
     while (true) {
         if (kbd_poll_char(&c)) return c;
-         
+
         __asm__ volatile("hlt");
     }
 }
