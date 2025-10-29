@@ -8,8 +8,8 @@
 
 #define KBD_BUF_SIZE 256
 
-volatile static uint16_t kbd_tail = 0;
-volatile static uint16_t kbd_head = 0;
+static volatile uint16_t kbd_tail = 0;
+static volatile uint16_t kbd_head = 0;
 static char kbd_buf[KBD_BUF_SIZE];
 
 
