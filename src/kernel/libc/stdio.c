@@ -5,19 +5,34 @@
 #define VGA_BUFFER 0xB8000
 #define WHITE_ON_BLACK 0x07 
 #define NUMBER_OF_COLUMNS 80
-
+#define NUMBER_OF_ROWS 25
 static size_t pos = 0; 
 
 extern int kbd_poll_char(char *out);
 
-void cls(void) {/* clears the screen */
+/* clears the screen */
+void cls(void) {
     uint16_t blank = (WHITE_ON_BLACK << 8) | ' ';
     uint16_t *vga = (uint16_t *)VGA_BUFFER;
 
-    for (size_t i = 0; i < NUMBER_OF_COLUMNS * 25; ++i)
+    for (size_t i = 0; i < NUMBER_OF_COLUMNS * NUMBER_OF_ROWS; i++)
         vga[i] = blank;
 
     pos = 0;
+}
+
+void scroll_up(void) {
+    uint16_t blank = (WHITE_ON_BLACK << 8) | ' ';
+    uint16_t *vga = (uint16_t *)VGA_BUFFER;
+    /* move every char from 2nd row up */
+    for (int i = 0; i < (NUMBER_OF_COLUMNS * (NUMBER_OF_ROWS - 1)); i++) {
+        vga[i] = vga[i + NUMBER_OF_COLUMNS];
+    }
+    /* clear last row */
+    for (int i = (NUMBER_OF_COLUMNS * (NUMBER_OF_ROWS - 1)); i <NUMBER_OF_COLUMNS * NUMBER_OF_ROWS; i++)
+        vga[i] = blank;
+    /* go up a row */
+    pos = pos - NUMBER_OF_COLUMNS;
 }
 
 void putchar(char c) {
@@ -39,6 +54,10 @@ void putchar(char c) {
             pos++;
             break;
     }
+    /* if pos hit the bottom of the screen scroll up */
+    if (pos >= NUMBER_OF_COLUMNS * NUMBER_OF_ROWS) {
+        scroll_up();
+    }
 }
 
 /*
@@ -49,7 +68,6 @@ void putchar(char c) {
     }
     but i think it lakcs readability and it's not that more efficient
 */
-// TODO implement check to see if pos hits bottom of the screen
 int printf(const char *format) {
     
     size_t i = 0;
@@ -61,8 +79,8 @@ int printf(const char *format) {
     return 0;
 }
 
-// TODO implement check to see if pos hits bottom of the screen
-int puts(const char *format) { /* same as printf but adding a \n at the end */
+/* same as printf but adding a \n at the end */
+int puts(const char *format) { 
     
     size_t i = 0;
     while (format[i] != '\0') {
@@ -75,7 +93,6 @@ int puts(const char *format) { /* same as printf but adding a \n at the end */
 }
 
 int getc(void) {
-    /* tell the keyboard we are waiting for chars */
     char c;
     /* non busy waiting */
     while (true) {
@@ -86,7 +103,7 @@ int getc(void) {
 }
 
 /* small helper to grow capacity geometrically (64,128,256,...) or linear after 1 KiB */
-/* since my realloc is what it is just i just do this instead of realloc everytime */
+/* since my realloc is what it is i just do this instead of realloc everytime */
 static int grow(char **pline, size_t *pcapacity, size_t need) {
     char  *line     = *pline;
     size_t capacity = *pcapacity;

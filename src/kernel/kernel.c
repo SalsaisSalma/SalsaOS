@@ -19,6 +19,6 @@ void kernel_main(void) {
     char *command = NULL;
     while (true) {
         command = getline(); 
-        printf(command);
+        // printf(command);
     }
 }
