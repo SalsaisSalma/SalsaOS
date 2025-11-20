@@ -47,7 +47,7 @@ kernel.o: src/kernel/kernel.c                       \
           src/kernel/libc/stdio.h                   \
           src/kernel/libc/stdlib.h                  \
           src/kernel/libc/stddef.h                  \
-		  src/kernel/devices/keyboard.h
+		  src/kernel/drivers/keyboard.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 stdlib.o: src/kernel/libc/stdlib.c \
@@ -73,8 +73,8 @@ cpu.o: src/kernel/cpu/cpu.c \
 	   src/kernel/libc/stddef.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-keyboard.o: src/kernel/devices/keyboard.c \
-			src/kernel/devices/keyboard.h \
+keyboard.o: src/kernel/drivers/keyboard.c \
+			src/kernel/drivers/keyboard.h \
 			src/kernel/cpu/cpu.h          \
 			src/kernel/libc/stdio.h       \
 			src/kernel/interrupts/pic.h
