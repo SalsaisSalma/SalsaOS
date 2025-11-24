@@ -12,6 +12,7 @@
 #define ATA_COMMAND     0x1F7
 
 #define ATA_CMD_READ    0x20
+#define ATA_CMD_WRITE   0x30
 #define ATA_BSY         0x80
 #define ATA_DRQ         0x08
 
@@ -24,6 +25,8 @@ void ata_wait_drq(void) {
     while(!(inb(ATA_STATUS) & ATA_DRQ));
 }
 
+
+/* code taken from: wiki.osdev.org/ATA_read/write_sectors */
 void ata_read_sector(uint32_t lba, uint8_t *buffer) {
     ata_wait_bsy();
 
@@ -41,7 +44,7 @@ void ata_read_sector(uint32_t lba, uint8_t *buffer) {
     outb(ATA_LBA_MID, (uint8_t)(lba >> 8));
     outb(ATA_LBA_HIGH, (uint8_t)(lba >> 16));
 
-    /* send Read Command */
+    /* send Read command */
     outb(ATA_COMMAND, ATA_CMD_READ);
 
     /* wait for the drive to signal it has data ready */
@@ -55,5 +58,33 @@ void ata_read_sector(uint32_t lba, uint8_t *buffer) {
         /* Reassemble bytes */
         buffer[i * 2] = (uint8_t) data;
         buffer[i * 2 + 1] = (uint8_t) (data >> 8);
+    }
+}
+
+void ata_write_sector(uint32_t lba, uint8_t *buffer) {
+    ata_wait_bsy();
+
+    /* select Master (0xE0) and high 4 bits of LBA */
+    outb(ATA_DRIVE_HEAD, 0xE0 | ((lba >> 24) & 0x0F));
+    
+    /* clear Error register / wait */
+    outb(ATA_ERROR, 0x00);
+
+    outb(ATA_SECTOR_CNT, 1);
+
+    outb(ATA_LBA_LOW, (uint8_t) lba);
+    outb(ATA_LBA_MID, (uint8_t)(lba >> 8));
+    outb(ATA_LBA_HIGH, (uint8_t)(lba >> 16));
+
+    /* send Write command */
+    outb(ATA_COMMAND, ATA_CMD_WRITE);
+
+    /* wait for the drive to signal it can receive data */
+    ata_wait_bsy();
+    ata_wait_drq();
+
+    for(int i = 0; i < 256; i++) {
+        uint16_t data = (uint16_t)buffer[i * 2] | ((uint16_t)buffer[i * 2 + 1] << 8);
+        outw(ATA_DATA, data);
     }
 }
