@@ -17,7 +17,8 @@ OBJS := header.o entry.o                      \
         stdlib.o stdio.o                      \
         interrupts_stubs.o interrupts.o pic.o \
 		cpu.o                                 \
-		keyboard.o
+		keyboard.o                            \
+		ata.o
 
 
 all: iso/build/kernel.elf iso
@@ -38,7 +39,7 @@ interrupts_stubs.o: src/kernel/interrupts/interrupts.asm
 	$(AS) -f elf64 $< -o $@
 
 #---------------------------------------------------
-# Compile kernel + custom libc + interrupts and pic
+# Compile kernel
 #---------------------------------------------------
 kernel.o: src/kernel/kernel.c                       \
           src/kernel/interrupts/interrupts.h        \
@@ -47,7 +48,8 @@ kernel.o: src/kernel/kernel.c                       \
           src/kernel/libc/stdio.h                   \
           src/kernel/libc/stdlib.h                  \
           src/kernel/libc/stddef.h                  \
-		  src/kernel/drivers/keyboard.h
+		  src/kernel/drivers/keyboard.h				\
+		  src/kernel/drivers/ata.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 stdlib.o: src/kernel/libc/stdlib.c \
@@ -80,6 +82,12 @@ keyboard.o: src/kernel/drivers/keyboard.c \
 			src/kernel/interrupts/pic.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+ata.o: src/kernel/drivers/ata.c \
+	   src/kernel/drivers/ata.h \
+	   src/kernel/cpu/cpu.h     \
+	   src/kernel/libc/stddef.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
 #---------------------------------------------------
 # Link into a freestanding ELF
 #---------------------------------------------------
@@ -91,9 +99,9 @@ iso/build/kernel.elf: $(OBJS)
 # Package with GRUB
 #---------------------------------------------------
 iso: iso/build/kernel.elf
-	# ensure the GRUB folder exists (it’s already versioned in your repo)
+	# ensure the GRUB folder exists 
 	mkdir -p iso/boot/grub
-	# symlink the freshly built kernel
+	# symlink the kernel
 	ln -sf ../build/kernel.elf iso/boot/kernel.elf
 	# generate the bootable ISO
 	grub2-mkrescue -o iso/build/salsaos.iso iso/ || true

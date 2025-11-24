@@ -1,9 +1,8 @@
-
 #include "libc/stdio.h"
 #include "cpu/cpu.h"
 #include "interrupts/interrupts.h"
 #include "interrupts/pic.h"
-
+#include "drivers/ata.h"
 void kernel_main(void) {
     cls();
     puts("Welcome to SalsaOS");
@@ -15,10 +14,10 @@ void kernel_main(void) {
     IRQ_clear_mask(1);          // unmask keyboard only
     sti();                      // enable interrupts
 
-    puts("Type on your keyboard...");
-    char *command = NULL;
-    while (true) {
-        command = getline(); 
-        // printf(command);
-    }
+    char write_data[512] = "damndamn";
+    ata_write_sector(0, (uint8_t*)write_data);
+    puts("should be working");
+    char read_data[512];
+    ata_read_sector(0, (uint8_t*)read_data);
+    puts(read_data);
 }
